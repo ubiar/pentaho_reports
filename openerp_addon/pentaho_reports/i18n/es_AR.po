@@ -592,7 +592,14 @@ msgstr "Selección Valor"
 #. module: pentaho_reports
 #: view:ir.actions.report.promptwizard:pentaho_reports.wiz_pentaho_report_prompt
 msgid "Selections"
-msgstr "Selecciones"
+msgstr "Filtros"
+
+#. module: pentaho_reports
+#: code:addons/pentaho_reports/report_prompt.py:365
+#: code:addons/pentaho_reports/report_prompt.py:327
+#, python-format
+msgid "Selections"
+msgstr "Filtros"
 
 #. module: pentaho_reports
 #: field:ir.actions.report.promptwizard,param_000_string_value:0

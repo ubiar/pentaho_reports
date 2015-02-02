@@ -324,7 +324,7 @@ class report_prompt_class(models.TransientModel):
                 add_subelement(sel_group,
                                'separator',
                                colspan = sel_group.get('col', '4'),
-                               string = 'Selections',
+                               string = _('Selections'),
                 )
 
                 first_parameter.update({'index': index,
@@ -362,18 +362,14 @@ class report_prompt_class(models.TransientModel):
 
         doc = etree.fromstring(result['arch'])
 
-        selection_groups = doc.findall('.//group[@string="Selections"]')
+        selection_groups = doc.findall('.//group[@string="'+_('Selections')+'"]')
 
         first_parameter = {}
-
         for index in range(0, len(parameters)):
             self.fvg_add_one_parameter(cr, uid, result, selection_groups, parameters, index, first_parameter, context=context)
-
         for sel_group in selection_groups:
             sel_group.set('string', '')
-
         result['arch'] = etree.tostring(doc)
-
         return result
 
     def decode_wizard_value(self, cr, uid, parameters, index, value, context=None):

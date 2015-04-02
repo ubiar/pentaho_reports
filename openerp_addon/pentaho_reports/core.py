@@ -247,24 +247,30 @@ class PentahoReportOpenERPInterface(report.interface.report_int):
         super(PentahoReportOpenERPInterface, self).__init__(name)
 
     def create(self, cr, uid, ids, data, context):
-        name = self.name
-        report_instance = Report(name, cr, uid, ids, data, context)
+        rendered_report = output_type = False
+        try:
+            name = self.name
+            report_instance = Report(name, cr, uid, ids, data, context)
 
-        pool = pooler.get_pool(cr.dbname)
-        ir_pool = pool.get('ir.actions.report.xml')
-        report_xml_ids = ir_pool.search(cr, uid,
-                [('report_name', '=', name[len(SERVICE_NAME_PREFIX):])], context=context)
+            pool = pooler.get_pool(cr.dbname)
+            ir_pool = pool.get('ir.actions.report.xml')
+            report_xml_ids = ir_pool.search(cr, uid,
+                    [('report_name', '=', name[len(SERVICE_NAME_PREFIX):])], context=context)
 
-        rendered_report, output_type = report_instance.execute()
-        if report_xml_ids:
-            report_xml = ir_pool.browse(cr, uid, report_xml_ids[0], context=context)
-            if report_xml.attachment:
-                crtemp = pooler.get_db(cr.dbname).cursor()  # Creating new cursor to prevent TransactionRollbackError
-                                                            # when creating attachments, avoids concurrency issues
-                self.create_attachment(crtemp, uid, ids, report_xml.attachment, rendered_report, output_type, report_xml.pentaho_report_model_id.model, context=context)
+            rendered_report, output_type = report_instance.execute()
+            if report_xml_ids:
+                report_xml = ir_pool.browse(cr, uid, report_xml_ids[0], context=context)
+                if report_xml.attachment:
+                    crtemp = pooler.get_db(cr.dbname).cursor()  # Creating new cursor to prevent TransactionRollbackError
+                                                                # when creating attachments, avoids concurrency issues
+                    self.create_attachment(crtemp, uid, ids, report_xml.attachment, rendered_report, output_type, report_xml.pentaho_report_model_id.model, context=context)
 
-                crtemp.commit()  # It means attachment will be created even if error occurs
-                crtemp.close()
+                    crtemp.commit()  # It means attachment will be created even if error occurs
+                    crtemp.close()
+        except Exception, e:
+            # Intento eliminar el usuario temporal por si se creo ya que si no quedaba creado
+            pool.get('res.users').pentaho_temp_users_unlink(cr, uid, uid)
+            raise except_orm(_('Error en el Reporte'), _('Detalle Tecnico:\n%s') % e)
         return rendered_report, output_type
 
     def getObjects(self, cr, uid, ids, model, context):

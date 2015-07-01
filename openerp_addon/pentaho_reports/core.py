@@ -133,7 +133,9 @@ def get_proxy_args(instance, cr, uid, prpt_content, context_vars={}):
     current_user = pool.get('res.users').browse(cr, uid, uid)
     config_obj = pool.get('ir.config_parameter')
 
-    temp_user_login = pool.get('res.users').pentaho_temp_user_find(cr, uid, uid)
+    # No usamos la conexión con el ORM desde Pentaho asi que no tiene sentido crear el usuario temporal
+    # temp_user_login = pool.get('res.users').pentaho_temp_user_find(cr, uid, uid)
+    temp_user_login = False
 
     proxy_url = config_obj.get_param(cr, uid, 'pentaho.server.url', default='http://localhost:8080/pentaho-reports-for-openerp')
 

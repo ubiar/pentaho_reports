@@ -6,7 +6,6 @@ import xmlrpclib
 import base64
 
 from openerp import netsvc
-from openerp import pooler
 from openerp import report
 from openerp import models, fields, _
 from openerp.exceptions import except_orm
@@ -129,7 +128,7 @@ def get_proxy_args(instance, cr, uid, prpt_content, context_vars={}):
              as reserved parameters evaluated according to values in
              the dictionary "context_vars".
     """
-    pool = pooler.get_pool(cr.dbname)
+    pool = openerp.registry(cr.dbname)
 
     current_user = pool.get('res.users').browse(cr, uid, uid)
     config_obj = pool.get('ir.config_parameter')
@@ -176,7 +175,7 @@ class Report(object):
         self.ids = ids
         self.data = data
         self.context = context or {}
-        self.pool = pooler.get_pool(self.cr.dbname)
+        self.pool = openerp.registry(self.cr.dbname)
         self.prpt_content = None
         self.default_output_type = DEFAULT_OUTPUT_TYPE
         self.context_vars = {
@@ -233,7 +232,7 @@ class Report(object):
 
         rendered_report = proxy.report.execute(proxy_argument).data
 
-        pool = pooler.get_pool(self.cr.dbname)
+        pool = openerp.registry(self.cr.dbname)
         pool.get('res.users').pentaho_temp_users_unlink(self.cr, self.uid, [self.uid])
 
         if len(rendered_report) == 0:
@@ -252,7 +251,7 @@ class PentahoReportOpenERPInterface(report.interface.report_int):
             name = self.name
             report_instance = Report(name, cr, uid, ids, data, context)
 
-            pool = pooler.get_pool(cr.dbname)
+            pool = openerp.registry(cr.dbname)
             ir_pool = pool.get('ir.actions.report.xml')
             report_xml_ids = ir_pool.search(cr, uid,
                     [('report_name', '=', name[len(SERVICE_NAME_PREFIX):])], context=context)
@@ -274,7 +273,7 @@ class PentahoReportOpenERPInterface(report.interface.report_int):
         return rendered_report, output_type
 
     def getObjects(self, cr, uid, ids, model, context):
-        pool = pooler.get_pool(cr.dbname)
+        pool = openerp.registry(cr.dbname)
         return pool.get(model).browse(cr, uid, ids, context=context)
                                                     #list_class=browse_record_list, context=context, fields_process=_fields_process)
 
@@ -282,7 +281,7 @@ class PentahoReportOpenERPInterface(report.interface.report_int):
         """Generates attachment when report is called and links to object it is called from
         Returns: True """
         objs = self.getObjects(cr, uid, ids, model, context)
-        pool = pooler.get_pool(cr.dbname)
+        pool = openerp.registry(cr.dbname)
         attachment_pool = pool.get('ir.attachment')
         for obj in objs:
             attachment_ids = attachment_pool.search(cr, uid, [('res_id', '=', obj.id), ('res_model', '=', model)], context=context)

@@ -341,7 +341,7 @@ class report_prompt_class(models.TransientModel):
                                             ('true' if parameters[index].get('mandatory', False) else 'false',
                                              'true' if parameters[index].get('hidden', False) else 'false',
                                              ),
-                           widget = is_2m and 'many2many_tags' or None,
+                           widget = None, #is_2m and 'many2many_tags' or None, # Por el momento no se usa mas este widget hasta que sea configurable
                            domain = is_2m and ('[("x2m_unique_id", "=", x2m_unique_id), ("entry_num", "=", %d)]' % index) or None,
                            )
 

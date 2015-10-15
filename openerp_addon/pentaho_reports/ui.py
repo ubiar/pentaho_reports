@@ -69,7 +69,7 @@ class report_xml(models.Model):
                        'res_model': 'ir.actions.report.promptwizard',
                        'type' : 'ir.actions.act_window',
                        'view_type': 'form',
-                       'view_mode': 'tree,form',
+                       'view_mode': 'form',
                        'view_id' : view_ids and view_ids[0] or 0,
                        'context' : "{'service_name': '%s'}" % vals.get('report_name', ''),
                        'target' : 'new',

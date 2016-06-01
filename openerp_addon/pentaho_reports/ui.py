@@ -194,7 +194,6 @@ class report_xml(models.Model):
                                 'name': report.name,
                                 'model': report.model,
                                 'key': 'action',
-                                'object': True,
                                 'key2': 'client_print_multi',
                                 'value': 'ir.actions.report.xml,%s' % report.id,
                                 }

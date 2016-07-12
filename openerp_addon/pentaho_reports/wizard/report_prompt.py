@@ -231,13 +231,16 @@ class report_prompt_class(models.TransientModel):
                         x2m_unique_id = 1
 
                 selection_options = type(parameters[index].get('selection_options')) in (list, tuple) and parameters[index]['selection_options'] or []
+                values = []
                 for item in selection_options:
-                    mpwiz_obj.create(cr, uid, {'x2m_unique_id': x2m_unique_id, 'entry_num': index, 'selected': False,
-                                               'sel_int': item[0] if parameters[index]['type'] == TYPE_INTEGER else False,
-                                               'sel_str': item[0] if parameters[index]['type'] == TYPE_STRING else False,
-                                               'sel_num': item[0] if parameters[index]['type'] == TYPE_NUMBER else False,
-                                               'name': item[1],
-                                               }, context=context)
+                    values.append(x2m_unique_id)
+                    values.append(index)
+                    values.append(False)
+                    values.append(item[0] if parameters[index]['type'] == TYPE_INTEGER else False)
+                    values.append(item[0] if parameters[index]['type'] == TYPE_STRING else False)
+                    values.append(item[0] if parameters[index]['type'] == TYPE_NUMBER else 0)
+                    values.append(item[1])
+                cr.execute('INSERT INTO %s (x2m_unique_id, entry_num, selected, sel_int, sel_str, sel_num, name) VALUES %s' % (mpwiz_obj._table, ('(%s, %s, %s, %s, %s, %s, %s),' * len(selection_options))[:-1]), values)
         return x2m_unique_id
 
     def default_get(self, cr, uid, fields, context=None):

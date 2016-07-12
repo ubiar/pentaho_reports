@@ -240,7 +240,9 @@ class report_prompt_class(models.TransientModel):
                     values.append(item[0] if parameters[index]['type'] == TYPE_STRING else False)
                     values.append(item[0] if parameters[index]['type'] == TYPE_NUMBER else 0)
                     values.append(item[1])
-                cr.execute('INSERT INTO %s (x2m_unique_id, entry_num, selected, sel_int, sel_str, sel_num, name) VALUES %s' % (mpwiz_obj._table, ('(%s, %s, %s, %s, %s, %s, %s),' * len(selection_options))[:-1]), values)
+                    values.append(uid)
+                    values.append(uid)
+                cr.execute('INSERT INTO %s (x2m_unique_id, entry_num, selected, sel_int, sel_str, sel_num, name, create_uid, write_uid) VALUES %s' % (mpwiz_obj._table, ('(%s, %s, %s, %s, %s, %s, %s, %s, %s),' * len(selection_options))[:-1]), values)
         return x2m_unique_id
 
     def default_get(self, cr, uid, fields, context=None):

@@ -150,7 +150,7 @@ class report_xml(models.Model):
 
         for r in self.browse(cr, uid, ids if isinstance(ids, list) else [ids], context=context):
             created_menu_id = self.update_menu(cr, uid, r, context=context)
-            if created_menu_id != r.created_menu_id:
+            if created_menu_id != r.created_menu_id.id:
                 super(report_xml, self).write(cr, uid, [r.id], {'created_menu_id': created_menu_id}, context=context)
 
         self.update_pentaho(cr, uid, ids if isinstance(ids, list) else [ids], context=context)

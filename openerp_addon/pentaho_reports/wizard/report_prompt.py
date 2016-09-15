@@ -189,7 +189,6 @@ class report_prompt_class(models.TransientModel):
         report_record = self.pool.get('ir.actions.report.xml').browse(cr, uid, report_id, context=context)
 
         prpt_content = base64.decodestring(report_record.pentaho_file)
-
         proxy_url, proxy_argument = get_proxy_args(self, cr, uid, prpt_content, {
                                                                                  'ids': [],           # meaningless in this context, so pass nothing...
                                                                                  'uid': uid,
@@ -249,7 +248,9 @@ class report_prompt_class(models.TransientModel):
     def default_get(self, cr, uid, fields, context=None):
         if context is None:
             context={}
-
+        # Cuando confirmas los filtros se vuelve a ejecutar y no tiene sentido
+        if context.get('from_button'):
+            return super(report_prompt_class, self).default_get(cr, uid, fields, context=context)
         report_action_id = self._find_report_id(cr, uid, context=context)
         parameters = self._setup_parameters(cr, uid, report_action_id, context=context)
 
@@ -357,6 +358,8 @@ class report_prompt_class(models.TransientModel):
 
         result = super(report_prompt_class, self).fields_view_get(cr, uid, view_id=view_id, view_type=view_type, context=context, toolbar=toolbar, submenu=submenu)
 
+        if view_type != 'form':
+            return result
         # fields_view_get() is called during module installation, in which case there is no
         # service_name in the context.
         if context.get('service_name', '').strip() == '':

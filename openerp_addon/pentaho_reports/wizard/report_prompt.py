@@ -235,7 +235,7 @@ class report_prompt_class(models.TransientModel):
                     values.append(x2m_unique_id)
                     values.append(index)
                     values.append(False)
-                    values.append(item[0] if parameters[index]['type'] == TYPE_INTEGER else False)
+                    values.append(item[0] if parameters[index]['type'] == TYPE_INTEGER else 0)
                     values.append(item[0] if parameters[index]['type'] == TYPE_STRING else False)
                     values.append(item[0] if parameters[index]['type'] == TYPE_NUMBER else 0)
                     values.append(item[1])

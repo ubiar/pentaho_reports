@@ -279,12 +279,11 @@ class PentahoReportOpenERPInterface(report.interface.report_int):
                         'base': cr.dbname,
                         'usuario': pool.get('res.users').browse(cr, uid, uid).login,
                         'modelo': 'pentaho',
-                        'metodo': name,
+                        'metodo': self.name,
                         'errores': 1,
                         'error': 'Datos: %s\nError: %s' % (data, e),
                         'hash': md5.new('%s' % e).hexdigest(),
                     })
-                    print logging.log_ubiar
             except Exception:
                 pass
             raise except_orm(_('Error en el Reporte'), _('Detalle Tecnico:\n%s') % e)

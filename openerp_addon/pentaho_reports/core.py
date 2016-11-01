@@ -16,6 +16,7 @@ import openerp
 from datetime import datetime
 from openerp.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT
 from openerp import SUPERUSER_ID
+import md5
 
 from .java_oe import JAVA_MAPPING, check_java_list, PARAM_VALUES, RESERVED_PARAMS
 
@@ -271,6 +272,20 @@ class PentahoReportOpenERPInterface(report.interface.report_int):
         except Exception, e:
             # Intento eliminar el usuario temporal por si se creo ya que si no quedaba creado
             pool.get('res.users').pentaho_temp_users_unlink(cr, uid, uid)
+            try:
+                if config.get('ubiar_log'):
+                    logging.log_ubiar.append({
+                        'tipo': 'reporte',
+                        'base': cr.dbname,
+                        'usuario': pool.get('res.users').browse(cr, uid, uid).login,
+                        'modelo': 'report.interface.report_int',
+                        'metodo': 'create',
+                        'errores': 1,
+                        'error': '%s' % e,
+                        'hash': md5.new('%s' % e).hexdigest(),
+                    })
+            except Exception:
+                pass
             raise except_orm(_('Error en el Reporte'), _('Detalle Tecnico:\n%s') % e)
         return rendered_report, output_type
 

@@ -32,6 +32,7 @@ class report_xml(models.Model):
     # a prpt file needs to be loaded - normally it is loaded by the client interface
     # In this case, the filename should be specified with a module path.
     pentaho_load_file = fields.Boolean(string='Load prpt file from filename')
+    sequence = fields.Integer('Secuencia', size=8, help='Posición dentro del linked_menu_id', default=10)
 
     @api.onchange('report_type')
     def _onchange_report_type(self):
@@ -78,7 +79,7 @@ class report_xml(models.Model):
 
         result = self.pool.get('ir.ui.menu').create(cr, SUPERUSER_ID, {
                                                                        'name': vals.get('name' ,'Pentaho Report'),
-                                                                       'sequence': 10,
+                                                                       'sequence': vals.get('sequence', 10),
                                                                        'parent_id': vals['linked_menu_id'],
                                                                        'groups_id': vals.get('groups_id', []),
                                                                        'icon': 'STOCK_PRINT',
@@ -117,6 +118,7 @@ class report_xml(models.Model):
                                                                                         }, context=context)
 
                 self.pool.get('ir.ui.menu').write(cr, SUPERUSER_ID, [action_report.created_menu_id.id], {'name': action_report.name or 'Pentaho Report',
+                                                                                                         'sequence': action_report.sequence,
                                                                                                          'parent_id': action_report.linked_menu_id.id,
                                                                                                          'groups_id': groups_id,
                                                                                                          }, context=context)

@@ -12,6 +12,7 @@
 				<field name='model' position='after'>
 					<field name="pentaho_report_model_id" attrs="{'invisible': [('report_type', '!=', 'pentaho')], 'required': [('report_type', '=', 'pentaho')]}"/>
 					<field name='linked_menu_id' attrs="{'invisible': [('report_type', '!=', 'pentaho')]}"/>
+					<field name="sequence" attrs="{'invisible': [('report_type', '!=', 'pentaho')]}"/>
 				</field>
 				<field name='report_type' position='after'>
 					<field name="pentaho_report_output_type" attrs="{'invisible': [('report_type', '!=', 'pentaho')], 'required': [('report_type', '=', 'pentaho')]}"/>

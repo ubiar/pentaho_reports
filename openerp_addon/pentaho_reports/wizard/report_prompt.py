@@ -158,7 +158,9 @@ class report_prompt_class(models.TransientModel):
 
         if parameter['attributes'].get('hidden', 'false') == 'true':
             result['hidden'] = True
-
+        
+        if parameter['attributes'].get('data-format'):
+            result['model'] = parameter['attributes'].get('data-format')
         return result
 
     def _parse_report_parameters(self, report_parameters, context=None):
@@ -196,8 +198,9 @@ class report_prompt_class(models.TransientModel):
                                                                                  })
         proxy = xmlrpclib.ServerProxy(proxy_url)
         report_parameters = proxy.report.getParameterInfo(proxy_argument)
-
-        return self._parse_report_parameters(report_parameters, context=context)
+        res = self._parse_report_parameters(report_parameters, context=context)
+        res = sorted(res, key=lambda k: k.get('hidden', '')) 
+        return res
 
     def report_defaults_dictionary(self, cr, uid, report_action_id, parameters, x2m_unique_id, context=None):
         report_action = self.pool.get('ir.actions.report.xml').browse(cr, uid, report_action_id, context=context)
@@ -221,7 +224,7 @@ class report_prompt_class(models.TransientModel):
         x2m_unique_id = False
         mpwiz_obj = self.pool.get('ir.actions.report.multivalues.promptwizard')
         for index in range(0, len(parameters)):
-            if parameter_can_2m(parameters, index):
+            if parameter_can_2m(parameters, index) and not parameters[index].get('model'):
                 if not x2m_unique_id:
                     mpwiz_ids = mpwiz_obj.search(cr, uid, [('x2m_unique_id', '>', 0)], order='x2m_unique_id desc', limit=1, context=context)
                     if mpwiz_ids:
@@ -294,8 +297,8 @@ class report_prompt_class(models.TransientModel):
                 result['fields'][field_name]['type'] = 'selection'
                 result['fields'][field_name]['selection'] = selection_options
 
-        def add_2m_field(result, field_name, selection_options=False, required=False):
-            result['fields'][field_name] = {'relation': 'ir.actions.report.multivalues.promptwizard',
+        def add_2m_field(result, field_name, selection_options=False, required=False, model=False):
+            result['fields'][field_name] = {'relation': model or 'ir.actions.report.multivalues.promptwizard',
                                             'store': False,
                                             'string': 'Multi Select',
                                             'type': 'many2many',
@@ -312,11 +315,13 @@ class report_prompt_class(models.TransientModel):
 
         field_name = parameter_resolve_column_name(parameters, index)
         is_2m = parameter_can_2m(parameters, index)
+        model = parameters[index].get('model', False)
         if is_2m:
             add_2m_field(result,
                          field_name,
                          selection_options = parameters[index].get('selection_options', False),
                          required = parameters[index].get('mandatory', False),
+                         model = model,
                          )
         else:
             add_field(result,
@@ -328,17 +333,28 @@ class report_prompt_class(models.TransientModel):
         for sel_group in selection_groups:
             default_focus = '0'
             if not first_parameter and not parameters[index].get('hidden', False):
-                add_subelement(sel_group,
-                               'separator',
-                               colspan = sel_group.get('col', '4'),
-                               string = _('Selections'),
-                )
+                sel_group.insert(0, etree.Element('separator', {'colspan': '4', 'string': _('Selections')}))
 
                 first_parameter.update({'index': index,
                                         'name': field_name,
                                         })
                 default_focus = '1'
-
+            if index % 2 == 0:
+                sel_group = sel_group.findall('.//group[@name="a"]')[0]
+            else:
+                sel_group = sel_group.findall('.//group[@name="b"]')[0]
+            domain = is_2m and ('[("x2m_unique_id", "=", x2m_unique_id), ("entry_num", "=", %d)]' % index) or None
+            nolabel = '0'
+            if is_2m and not parameters[index].get('hidden'):
+                nolabel = '1'
+                add_subelement(sel_group, 'label', string=parameters[index]['label'], colspan='2', style='font-weight: bold;')
+            if is_2m and model:
+                domain = '[]'
+                if parameters[index].get('selection_options'):
+                    domain = []
+                    for v in parameters[index].get('selection_options'):
+                        domain.append(v[0])
+                    domain = str([['id', 'in', domain]])
             add_subelement(sel_group,
                            'field',
                            name = field_name,
@@ -349,7 +365,9 @@ class report_prompt_class(models.TransientModel):
                                              'true' if parameters[index].get('hidden', False) else 'false',
                                              ),
                            widget = None, #is_2m and 'many2many_tags' or None, # Por el momento no se usa mas este widget hasta que sea configurable
-                           domain = is_2m and ('[("x2m_unique_id", "=", x2m_unique_id), ("entry_num", "=", %d)]' % index) or None,
+                           domain = domain,
+                           nolabel = nolabel,
+                           colspan = '2',
                            )
 
     def fields_view_get(self, cr, uid, view_id=None, view_type='form', context=None, toolbar=False, submenu=False):
@@ -388,6 +406,8 @@ class report_prompt_class(models.TransientModel):
             # if value comes from a dictionary with a default column value, it will be in the format:
             #        [(6, 0, [ids])]
             #
+            if parameters[index].get('model'):
+                return parameters[index].get('result_vals')
             if value and type(value[0]) in (list, tuple):
                 value = self.pool.get('ir.actions.report.multivalues.promptwizard').browse(cr, uid, value[0][2], context=context)
             result = value and [(x.sel_int if parameters[index]['type'] == TYPE_INTEGER else \
@@ -448,6 +468,38 @@ class report_prompt_class(models.TransientModel):
                 'report_name': context.get('service_name', ''),
                 'datas': data,
                 }
+                
+    @api.model
+    def create(self, vals):
+        self._process_vals(vals)
+        obj = super(report_prompt_class, self).create(vals)
+        return obj
+        
+    @api.multi
+    def write(self, vals): 
+        self._process_vals(vals)
+        res = super(report_prompt_class, self).write(vals)
+        return res
+    
+    @api.model
+    def _process_vals(self, vals):
+        parameters = json.loads(vals.get('parameters_dictionary'))
+        index = 0
+        for p in parameters:
+            if parameter_can_2m([p], 0) and p.get('model'):
+                field_name = parameter_resolve_column_name(parameters, index)
+                model = p.get('model')
+                if field_name in vals:
+                    field_vals = vals[field_name][0][2]
+                    del vals[field_name]
+                    if not field_vals:
+                        default_ids = []
+                        for v in p.get('selection_options'):
+                            default_ids.append(v[0])
+                        field_vals = list(self.env[model].search([('id', 'in', default_ids)])._ids)
+                    p['result_vals'] = field_vals
+            index += 1
+        vals['parameters_dictionary'] = json.dumps(parameters)
 
 
 class report_prompt_m2m(models.TransientModel):
@@ -460,3 +512,4 @@ class report_prompt_m2m(models.TransientModel):
     sel_str = fields.Char(string='Selection String')
     sel_num = fields.Float(string='Selection Number')
     name = fields.Char(string='Selection Value')
+    

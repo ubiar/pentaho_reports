@@ -12,11 +12,24 @@
 					<group name='parameters'>
 						<field name="id" invisible="1"/>
 						<field name='x2m_unique_id' invisible='1'/>
-						<field name="report_action_id" readonly="1"/>
 						<field name="parameters_dictionary" invisible='1'/>
-						<field name="output_type"/>
+						<group>
+						    <group>
+						        <field name="report_action_id" readonly="1"/>
+						    </group>
+						    <group>
+						        <field name="output_type"/>
+						    </group>
+						</group>
 						<!-- Place holder group for where selections will be inserted -->
-						<group colspan="4" col='4' string='Selections'/>
+						<group colspan="4" col='4' string='Selections' style="margin-top: -30px;">
+						    <group name='a'>
+						        
+						    </group>
+						    <group name='b'>
+						        
+						    </group>
+						</group>
 					</group>
 					<footer>
 						<button class="oe_highlight" string='_Print' name='check_report' type='object' />

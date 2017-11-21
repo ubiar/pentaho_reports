@@ -199,7 +199,14 @@ class report_prompt_class(models.TransientModel):
         proxy = xmlrpclib.ServerProxy(proxy_url)
         report_parameters = proxy.report.getParameterInfo(proxy_argument)
         res = self._parse_report_parameters(report_parameters, context=context)
-        res = sorted(res, key=lambda k: k.get('hidden', '')) 
+        res_invisible = []
+        res_visible = []
+        for r in res:
+            if r.get('hidden'):
+                res_invisible.append(r)
+            else:
+                res_visible.append(r)
+        res = res_visible + res_invisible
         return res
 
     def report_defaults_dictionary(self, cr, uid, report_action_id, parameters, x2m_unique_id, context=None):

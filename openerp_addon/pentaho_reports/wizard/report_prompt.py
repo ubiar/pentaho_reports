@@ -292,6 +292,7 @@ class report_prompt_class(models.TransientModel):
     def fvg_add_one_parameter(self, cr, uid, result, selection_groups, parameters, index, first_parameter, context=None):
 
         def add_field(result, field_name, selection_options=False, required=False):
+
             result['fields'][field_name] = {'selectable': self._columns[field_name].selectable,
                                             'type': self._columns[field_name]._type,
                                             'size': self._columns[field_name].size,
@@ -362,6 +363,22 @@ class report_prompt_class(models.TransientModel):
                     for v in parameters[index].get('selection_options'):
                         domain.append(v[0])
                     domain = str([['id', 'in', domain]])
+            
+            
+            options = {}
+            original_name = parameters[index]['variable']
+            if original_name[:11] in ['fecha_desde', 'fecha_hasta']:
+                fecha_desde = ''
+                fecha_hasta = ''
+                param_index = 0
+                for param in parameters:
+                    if param.get('variable') == 'fecha_desde' + original_name[11:]:
+                        fecha_desde = parameter_resolve_column_name(parameters, param_index)
+                    if param.get('variable') == 'fecha_hasta' + original_name[11:]:
+                        fecha_hasta = parameter_resolve_column_name(parameters, param_index)
+                    param_index += 1
+                options['fecha_predefinida_desde'] = fecha_desde
+                options['fecha_predefinida_hasta'] = fecha_hasta
             add_subelement(sel_group,
                            'field',
                            name = field_name,
@@ -375,6 +392,7 @@ class report_prompt_class(models.TransientModel):
                            domain = domain,
                            nolabel = nolabel,
                            colspan = '2',
+                           options = '%s' % options,
                            )
 
     def fields_view_get(self, cr, uid, view_id=None, view_type='form', context=None, toolbar=False, submenu=False):

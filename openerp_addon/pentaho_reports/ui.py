@@ -25,6 +25,8 @@ class report_xml(models.Model):
     pentaho_report_model_id = fields.Many2one('ir.model', string='Model')
     pentaho_file = fields.Binary(string='File', filters='*.prpt')
     pentaho_filename = fields.Char(string='Filename', size=256, required=False)
+    pentaho_user_file = fields.Binary(string='Archivo de Usuario', filters='*.prpt')
+    pentaho_user_filename = fields.Char(string='Nombre de Archivo de Usuario', size=256, required=False)
 #                 'is_pentaho_report': fields.boolean('Is this a Pentaho report?'),
     linked_menu_id = fields.Many2one('ir.ui.menu', string='Linked menu item', select=True)
     created_menu_id = fields.Many2one('ir.ui.menu', string='Created menu item')

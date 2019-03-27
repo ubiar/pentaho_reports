@@ -190,7 +190,7 @@ class report_prompt_class(models.TransientModel):
 
         report_record = self.pool.get('ir.actions.report.xml').browse(cr, uid, report_id, context=context)
 
-        prpt_content = base64.decodestring(report_record.pentaho_file)
+        prpt_content = base64.decodestring(report_record.pentaho_user_file or report_record.pentaho_file)
         proxy_url, proxy_argument = get_proxy_args(self, cr, uid, prpt_content, {
                                                                                  'ids': [],           # meaningless in this context, so pass nothing...
                                                                                  'uid': uid,

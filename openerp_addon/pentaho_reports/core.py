@@ -191,7 +191,6 @@ class Report(object):
         ids = self.pool.get('ir.actions.report.xml').search(self.cr, self.uid, [('report_name', '=', self.name[len(SERVICE_NAME_PREFIX):]), ('report_type', '=', 'pentaho')], context=self.context)
         if not ids:
             raise except_orm(_('Error'), _("Report service name '%s' is not a Pentaho report.") % self.name[len(SERVICE_NAME_PREFIX):])
-        print 'AAAAAA ----------------'
         data = self.pool.get('ir.actions.report.xml').read(self.cr, self.uid, ids[0], ['pentaho_report_output_type', 'pentaho_file', 'pentaho_user_file'])
         self.default_output_type = data['pentaho_report_output_type'] or DEFAULT_OUTPUT_TYPE
         pentaho_file = data.get('pentaho_user_file') or data.get('pentaho_file')

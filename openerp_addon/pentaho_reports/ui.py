@@ -174,7 +174,7 @@ class report_xml(models.Model):
         values_obj = self.pool.get('ir.values')
 
         for report in self.browse(cr, uid, ids):
-            values_ids = values_obj.search(cr, uid, [('value', '=', 'ir.actions.report.xml,%s' % report.id)])
+            values_ids = values_obj.search(cr, uid, [('value', '=', 'ir.actions.report.xml,%s' % report.id)], limit=1)
 
             if report.report_type == 'pentaho':
                 if report.pentaho_filename:

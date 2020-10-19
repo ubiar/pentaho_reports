@@ -233,7 +233,7 @@ class Report(object):
                     # turn in to list
                     if java_list and type(proxy_argument['report_parameters'][parameter['name']]) != list:
                         proxy_argument['report_parameters'][parameter['name']] = [proxy_argument['report_parameters'][parameter['name']]]
-
+        
         rendered_report = proxy.report.execute(proxy_argument).data
 
         pool = openerp.registry(self.cr.dbname)
@@ -271,6 +271,15 @@ class PentahoReportOpenERPInterface(report.interface.report_int):
                     crtemp.commit()  # It means attachment will be created even if error occurs
                     crtemp.close()
         except Exception, e:
+            if hasattr(e, 'faultString'):
+                e = e.faultString
+                if data and data.get('variables'):
+                    for key, val in data['variables'].items():
+                        if type(val) in [unicode, str]:
+                            val = "'%s'" % val
+                        elif type(val) == list:
+                            val = str(val)[1:-1]
+                        e = e.replace('${%s}' % key, '%s' % val)
             # Intento eliminar el usuario temporal por si se creo ya que si no quedaba creado
             pool.get('res.users').pentaho_temp_users_unlink(cr, uid, uid)
             try:
@@ -287,7 +296,7 @@ class PentahoReportOpenERPInterface(report.interface.report_int):
                     })
             except Exception:
                 pass
-            raise except_orm(_('Error en el Reporte'), _('Detalle Tecnico:\n%s') % e)
+            raise Warning(_('Error en el Reporte\nDetalle Tecnico\n\n%s') % e)
         return rendered_report, output_type
 
     def getObjects(self, cr, uid, ids, model, context):

@@ -522,6 +522,12 @@ class report_prompt_class(models.TransientModel):
                         for v in p.get('selection_options'):
                             default_ids.append(v[0])
                         field_vals = list(self.env[model].search([('id', 'in', default_ids)])._ids)
+                        # Si supera los 16k da un error en el IN por el JDBC de JAVA
+                        # java.io.IOException: Tried to send an out-of-range integer as a 2-byte value
+                        # en ese caso se envia vacio y el reporte debe contemplar que si el valor esta vacio
+                        # traiga todo
+                        if len(field_vals) > 16000:
+                            field_vals = []
                     p['result_vals'] = field_vals
             index += 1
         vals['parameters_dictionary'] = json.dumps(parameters)
